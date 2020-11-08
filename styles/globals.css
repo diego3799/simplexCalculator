@@ -14,3 +14,9 @@ a {
 * {
   box-sizing: border-box;
 }
+
+h2 {
+  font-family: "Dancing Script";
+  font-size: 3rem;
+  margin: 10px 0;
+}
