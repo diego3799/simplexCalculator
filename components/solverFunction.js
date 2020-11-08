@@ -1,4 +1,4 @@
-import { isArguments } from "lodash";
+import { isArguments, sum } from "lodash";
 import React from "react";
 import { Table } from "./StyledItems";
 const _ = require("lodash");
@@ -32,7 +32,7 @@ export default class SimplexSolver {
           /**Agregamos una variable de exceso */
           exceso++;
           /**Aqui agregamos la variable de holgura */
-          renglones[2 + index + 1] = 1;
+          renglones[2 + index + 1] = -1;
           /**Aqui agregamos la variable de exceso */
           renglones[2 + holgura + exceso] = 1;
 
@@ -40,7 +40,10 @@ export default class SimplexSolver {
       }
     });
     arrayRestricciones.push(
-      this.todo === "max"
+      /**Si hay variables de exceso */
+      exceso > 0
+        ? [parseFloat(this.objetivo.z), 0, 0]
+        : this.todo === "max"
         ? [
             parseFloat(this.objetivo.z),
             -1 * this.objetivo.x1,
@@ -74,11 +77,22 @@ export default class SimplexSolver {
     });
     let variablesHeader = ["Z", "X1", "X2"];
     let variablesBase = [];
-    for (let i = 0; i < holgura; i++) {
-      variablesBase.push(`H${i + 1}`);
-      variablesHeader.push(`H${i + 1}`);
+    if (exceso === 0) {
+      for (let i = 0; i < holgura; i++) {
+        variablesBase.push(`H${i + 1}`);
+        variablesHeader.push(`H${i + 1}`);
+      }
+      variablesBase.push("Z");
+    } else {
+      for (let i = 0; i < holgura; i++) {
+        variablesHeader.push(`H${i + 1}`);
+      }
+      for (let i = 0; i < exceso; i++) {
+        variablesHeader.push(`E${i + 1}`);
+        variablesBase.push(`E${i + 1}`);
+      }
+      variablesBase.push("Z");
     }
-    variablesBase.push("Z");
     /**TODO: falta metodo de las dos fases */
     // console.log(variablesBase);
     // console.log(variablesHeader);
@@ -116,26 +130,36 @@ export default class SimplexSolver {
     );
     this.tablas.push(tabla);
   }
-  /**Tiene que ser recursivo, dado que no sabemos hasta donde puede terminar */
-  Simplex_Method(matrix, variablesBase) {
+
+  Second_Simplex(matrix, variablesBase, totVariables) {
     /**Primero tenemos que encontrar la columna pivote */
     /**La columna pivote es el valor más negativo en la fila de la función Z
      * En este caso es siempre el último renglon
      */
+    console.log("en tramos");
     let funcionZ = matrix.length - 1;
     let aux = 10000000;
+    let indexColumnaPivote = 0;
+
     matrix[funcionZ].forEach((item, index) => {
       /**Si el valor ya habia salido no puede volver a salir */
+      /**TODO:Eliminar */
       // if (!this.historyRenglones.includes(this.variablesHeader[index]))
-      if (item < aux) {
-        aux = item;
+      if (index !== this.totVariables) {
+        if (item <= aux) {
+          aux = item;
+          indexColumnaPivote = index;
+        }
       }
     });
-    let columnaPivote = _.indexOf(matrix[funcionZ], aux);
-    console.log(aux, columnaPivote);
+
+    let columnaPivote = indexColumnaPivote;
+
+    // _.indexOf(matrix[funcionZ], aux);
     /** Si no hay valor negativo, entonces acabamos
      * Aqui se acabo
      */
+    /** Si tenemos variables de exceso tenemos que ver que ya no esten en la base */
     if (aux >= 0) {
       return matrix;
     }
@@ -144,19 +168,27 @@ export default class SimplexSolver {
      * Primero tenemos que sacar todas las valoraciones de las constantes de las restricciones
      * Y quedarnos con el valor más bajo
      */
-    aux = 10000000;
+    aux = 100000;
+    let indexRenglonPivote = 0;
     let evaluaciones = matrix.map((item, index) => {
       let rest = item[this.totVariables];
       let valor = item[columnaPivote];
       /**No se pueden evaluar las restricciones negativas */
-      if (index !== funcionZ && rest >= 0) {
+      if (index !== funcionZ && rest >= 0 && valor > 0) {
+        console.log(rest, valor);
         let returnValue = rest / valor;
-        if (returnValue < aux) aux = returnValue;
+        if (returnValue <= aux) {
+          indexRenglonPivote = index;
+          aux = returnValue;
+        }
         return returnValue;
       }
       return null;
     });
-    let renglonPivote = _.indexOf(evaluaciones, aux);
+    console.log(indexRenglonPivote);
+    let renglonPivote = indexRenglonPivote;
+    console.log(renglonPivote, columnaPivote);
+    // _.indexOf(evaluaciones, aux);
     let elementoPivote = matrix[renglonPivote][columnaPivote];
     /**Ahora tenemos que crear la nueva matriz */
     /**Tenemos cambiar el renglon de la base por la variable que entra */
@@ -188,9 +220,216 @@ export default class SimplexSolver {
       }
     });
     this.CrearTabla(newMatrix, variablesBase);
+    /**A esta altura cambiamos las de exceso */
+    /**Ya que tenemos la nueva matriz,hacemos la llamada recursiva */
+    // return this.Second_Simplex(newMatrix, variablesBase);
+    // console.log(evaluaciones);
+  }
+  /**Tiene que ser recursivo, dado que no sabemos hasta donde puede terminar */
+  Simplex_Method(matrix, variablesBase) {
+    /**Primero tenemos que encontrar la columna pivote */
+    /**La columna pivote es el valor más negativo en la fila de la función Z
+     * En este caso es siempre el último renglon
+     */
+    let funcionZ = matrix.length - 1;
+    let aux = 10000000;
+    let indexColumnaPivote = 0;
+
+    matrix[funcionZ].forEach((item, index) => {
+      /**Si el valor ya habia salido no puede volver a salir */
+      /**TODO:Eliminar */
+      // if (!this.historyRenglones.includes(this.variablesHeader[index]))
+      if (index !== this.totVariables) {
+        if (item <= aux) {
+          aux = item;
+          indexColumnaPivote = index;
+        }
+      }
+    });
+
+    let columnaPivote = indexColumnaPivote;
+
+    // _.indexOf(matrix[funcionZ], aux);
+    /** Si no hay valor negativo, entonces acabamos
+     * Aqui se acabo
+     */
+    /** Si tenemos variables de exceso tenemos que ver que ya no esten en la base */
+    if (aux >= 0) {
+      return matrix;
+    } else {
+      if (this.exceso > 0) {
+        let flag = false;
+        variablesBase.forEach((item) => {
+          if (item.charAt(0) === "E") {
+            flag = true;
+          }
+        });
+        /**Si no hay  */
+        if (!flag) {
+          return { matrix, variablesBase };
+        }
+      }
+    }
+    /**Luego tenemos que encontrar el renglon pivote
+     * Primero tenemos que sacar todas las valoraciones de las constantes de las restricciones
+     * Y quedarnos con el valor más bajo
+     */
+    aux = 10000000;
+    let indexRenglonPivote = 0;
+    let evaluaciones = matrix.map((item, index) => {
+      let rest = item[this.totVariables];
+      let valor = item[columnaPivote];
+      /**No se pueden evaluar las restricciones negativas */
+      if (index !== funcionZ && rest >= 0) {
+        let returnValue = rest / valor;
+        if (returnValue <= aux) {
+          indexRenglonPivote = index;
+          aux = returnValue;
+        }
+        return returnValue;
+      }
+      return null;
+    });
+    let renglonPivote = indexRenglonPivote;
+    // _.indexOf(evaluaciones, aux);
+    let elementoPivote = matrix[renglonPivote][columnaPivote];
+    /**Ahora tenemos que crear la nueva matriz */
+    /**Tenemos cambiar el renglon de la base por la variable que entra */
+    variablesBase[renglonPivote] = this.variablesHeader[columnaPivote];
+    this.historyRenglones.push(this.variablesHeader[columnaPivote]);
+    /**Convertimos el valor del renglon pivote a uno */
+    const nuevoRenglon = matrix[renglonPivote].map((item) =>
+      _.round(item / elementoPivote, 5)
+    );
+
+    /**Ahora tenemos que generar la nueva matriz a ser evaluada */
+
+    let newMatrix = matrix.map((item, index) => {
+      /**Primero hay que ver si el renglon no es el mismo que el pivote
+       * Si si es lo saltamos
+       */
+      if (index !== renglonPivote) {
+        /**Obtener el valor de esa columna */
+        let valorColumna = item[columnaPivote];
+        let renglonMod = item.map((elementRenglon, indexRenglon) => {
+          return _.round(
+            nuevoRenglon[indexRenglon] * -1 * valorColumna + elementRenglon,
+            5
+          );
+        });
+        return renglonMod;
+      } else {
+        return nuevoRenglon;
+      }
+    });
+    this.CrearTabla(newMatrix, variablesBase);
+    /**A esta altura cambiamos las de exceso */
     /**Ya que tenemos la nueva matriz,hacemos la llamada recursiva */
     return this.Simplex_Method(newMatrix, variablesBase);
     // console.log(evaluaciones);
+  }
+  Simplex_Fase_1(matrix, variablesBase) {
+    /**Primero se tienen que sumar los valores de los renglones artificiales */
+    let suma = [];
+    let funcionZ = matrix.length - 1;
+    /**llenar de ceros */
+    for (let i = 0; i < matrix[0].length; i++) {
+      suma.push(0);
+    }
+    matrix.forEach((item, index) => {
+      /**El ultimo renglon no se suma */
+      if (index !== matrix.length - 1) {
+        for (let i = 0; i < item.length; i++) {
+          suma[i] = suma[i] + item[i];
+        }
+      }
+    });
+    /**Multimplicar todo por -1 */
+    /**Y Sumar suma con el renglon objetivo */
+    suma = suma.map((item, index) => -1 * item + matrix[funcionZ][index]);
+    matrix[funcionZ] = suma;
+    this.CrearTabla(matrix, variablesBase);
+    return matrix;
+  }
+  Convertir_Fase_2(matrix, variablesBase) {
+    let matrixSimplex = matrix;
+    variablesBase = variablesBase;
+    /**Tenemos que borrar todas las variables de exceso */
+    matrixSimplex = matrixSimplex.map((item) => {
+      let renglonSinExceso = _.remove(
+        item,
+        (__, index) => index < this.totVariables - this.exceso
+      );
+      renglonSinExceso.push(item.pop());
+      return renglonSinExceso;
+    });
+    /**Tenemos que modificar las variables del header */
+    let newVariablesHeader = this.variablesHeader.filter(
+      (item) => item.charAt(0) !== "E"
+    );
+    /**Tenemos que quitar el maximo de variables */
+    this.totVariables = 3 + this.holgura;
+    this.variablesHeader = newVariablesHeader;
+    this.CrearTabla(matrixSimplex, variablesBase);
+    /**Tenemos que cambiar el renglon de Z */
+    const nuevoRenglonZ =
+      this.todo === "max"
+        ? [
+            parseFloat(this.objetivo.z),
+            parseFloat(-1 * this.objetivo.x1),
+            parseFloat(-1 * this.objetivo.x2),
+          ]
+        : [
+            parseFloat(this.objetivo.z),
+            parseFloat(this.objetivo.x1),
+            parseFloat(this.objetivo.x2),
+          ];
+    /**Llenar de cero lo que falta */
+    for (let i = 0; i < matrixSimplex[0].length; i++) {
+      if (nuevoRenglonZ[i] === undefined) {
+        nuevoRenglonZ[i] = 0;
+      }
+    }
+    matrixSimplex.pop();
+    matrixSimplex.push(nuevoRenglonZ);
+    this.CrearTabla(matrixSimplex, variablesBase);
+    /**Aqui tenemos que hacer un cambio donde todos los renglones menos el ultimo
+     * se suman
+     */
+    let renglonZ = matrixSimplex.length - 1;
+    let renglonesSumados = [];
+    let renglonesIntermedios = [];
+    matrixSimplex.forEach((item, index) => {
+      if (index !== renglonZ) {
+        /**Primero tenemos que obtener el valor a multiplicar */
+        let valor_multiplicar = 0;
+        for (let i = 0; i < item.length; i++) {
+          if (item[i] === 1) {
+            valor_multiplicar = matrixSimplex[renglonZ][i];
+            break;
+          }
+        }
+        const renglonModificado = item.map(
+          (valor) => valor * -1 * valor_multiplicar
+        );
+        renglonesIntermedios.push(renglonModificado);
+      }
+    });
+    /**Sumamos los renglones */
+    for (let i = 0; i < matrixSimplex[0].length; i++) {
+      let acum = 0;
+      for (let j = 0; j < renglonesIntermedios.length; j++) {
+        acum += renglonesIntermedios[j][i];
+      }
+      renglonesSumados.push(acum);
+    }
+    let renglonModificado = [];
+    for (let i = 0; i < renglonesSumados.length; i++) {
+      renglonModificado[i] = matrixSimplex[renglonZ][i] + renglonesSumados[i];
+    }
+    matrixSimplex[renglonZ] = [...renglonModificado];
+    this.CrearTabla(matrixSimplex, variablesBase);
+    this.Second_Simplex(matrixSimplex, variablesBase, true);
   }
   Solve() {
     /**Primero se deben de crear la matriz */
@@ -199,7 +438,12 @@ export default class SimplexSolver {
     /**Si tenemos una variable de exceso tenemos que hacer un procedimiento intermedio antes de pasara directamente al simplex */
     this.CrearTabla(this.matrix, variablesBase);
     if (this.exceso > 0) {
-      console.log("tenemos que hacer algo mas :(");
+      const matrizFase1 = this.Simplex_Fase_1(this.matrix, variablesBase);
+      const finalSimplex1 = this.Simplex_Method(matrizFase1, variablesBase);
+      const finalFase2 = this.Convertir_Fase_2(
+        finalSimplex1.matrix,
+        finalSimplex1.variablesBase
+      );
     } else {
       /**Sino nos seguimos con el simplex */
       const resultados = this.Simplex_Method(this.matrix, variablesBase);

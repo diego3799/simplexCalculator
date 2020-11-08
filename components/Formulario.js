@@ -8,22 +8,22 @@ import Solucion from "./Solucion";
 const Formulario = () => {
   const methods = useForm({
     defaultValues: {
-      objX: 6,
+      objX: 5,
       objY: 2,
       objZ: 1,
       todo: "max",
       restricciones: [
         {
           sign: "le",
-          x1: 1,
-          x2: 1,
-          z: 10,
+          x1: 6,
+          x2: 10,
+          z: 30,
         },
         {
           sign: "le",
-          x1: 2,
-          x2: 1,
-          z: 16,
+          x1: 10,
+          x2: 4,
+          z: 20,
         },
       ],
     },
@@ -120,7 +120,7 @@ export default Formulario;
 //     },
 //     {
 //       sign: "le",
-//       x1: 1/3,
+//       x1: 0.3333,
 //       x2: 1,
 //       z: 60,
 //     },
@@ -153,7 +153,6 @@ export default Formulario;
 //     },
 //   ],
 // },
-
 
 //PDF 2
 //Problema 1
