@@ -36,16 +36,24 @@ export default class SimplexSolver {
         case "ge":
           /**Si es mayor o igual se agregan variables de exceso y holgura */
           /**Agregamos una variable de exceso */
-          exceso++;
+          /**Si la variable es igual a cero o negativa tenemos que modificar */
+          contadorHolgura++;
+          if (item.z <= 0) {
+            renglones = [0, -1 * parseFloat(item.x1), -1 * parseFloat(item.x2)];
+            renglones[2 + index + 1] = 1;
+            variablesBase.push(`H${contadorHolgura}`);
+            return renglones;
+          } else {
+            exceso++;
+            /**Aqui agregamos la variable de holgura */
+            renglones[2 + index + 1] = -1;
+            /**Aqui agregamos la variable de exceso */
+            renglones[2 + holgura + exceso] = 1;
+            /**Se agrega vairable de exceso a la base */
+            variablesBase.push(`E${exceso}`);
 
-          /**Aqui agregamos la variable de holgura */
-          renglones[2 + index + 1] = -1;
-          /**Aqui agregamos la variable de exceso */
-          renglones[2 + holgura + exceso] = 1;
-          /**Se agrega vairable de exceso a la base */
-          variablesBase.push(`E${exceso}`);
-
-          return renglones;
+            return renglones;
+          }
       }
     });
     arrayRestricciones.push(
@@ -61,7 +69,6 @@ export default class SimplexSolver {
         : [parseFloat(this.objetivo.z), this.objetivo.x1, this.objetivo.x2]
     );
     let totVariables = 3 + holgura + exceso;
-
     /**Hay que llenar todos los vacios con ceros para evitar errores */
     let matrix = arrayRestricciones.map((item, index) => {
       if (index !== arrayRestricciones.length - 1) {
@@ -134,7 +141,6 @@ export default class SimplexSolver {
     /**La columna pivote es el valor más negativo en la fila de la función Z
      * En este caso es siempre el último renglon
      */
-    console.log("en tramos");
     let funcionZ = matrix.length - 1;
     let aux = 10000000;
     let indexColumnaPivote = 0;
@@ -224,7 +230,7 @@ export default class SimplexSolver {
     // console.log(evaluaciones);
   }
   /**Tiene que ser recursivo, dado que no sabemos hasta donde puede terminar */
-  Simplex_Method(matrix, variablesBase) {
+  Simplex_Method(matrix, variablesBase, detener) {
     /**Primero tenemos que encontrar la columna pivote */
     /**La columna pivote es el valor más negativo en la fila de la función Z
      * En este caso es siempre el último renglon
@@ -251,22 +257,21 @@ export default class SimplexSolver {
      * Aqui se acabo
      */
     /** Si tenemos variables de exceso tenemos que ver que ya no esten en la base */
-    if (aux >= 0) {
-      return matrix;
-    } else {
-      if (this.exceso > 0) {
-        let flag = false;
-        variablesBase.forEach((item) => {
-          if (item.charAt(0) === "E") {
-            flag = true;
-          }
-        });
-        /**Si no hay  */
-        if (!flag) {
-          return { matrix, variablesBase };
+    if (this.exceso > 0) {
+      let flag = false;
+      variablesBase.forEach((item) => {
+        if (item.charAt(0) === "E") {
+          flag = true;
         }
+      });
+      /**Si no hay  */
+      if (!flag) {
+        return { matrix, variablesBase };
       }
+    } else if (aux >= 0) {
+      return matrix;
     }
+
     /**Luego tenemos que encontrar el renglon pivote
      * Primero tenemos que sacar todas las valoraciones de las constantes de las restricciones
      * Y quedarnos con el valor más bajo
@@ -277,7 +282,7 @@ export default class SimplexSolver {
       let rest = item[this.totVariables];
       let valor = item[columnaPivote];
       /**No se pueden evaluar las restricciones negativas */
-      if (index !== funcionZ && rest >= 0) {
+      if (index !== funcionZ && valor >= 0) {
         let returnValue = rest / valor;
         if (returnValue <= aux) {
           indexRenglonPivote = index;
@@ -320,9 +325,10 @@ export default class SimplexSolver {
       }
     });
     this.CrearTabla(newMatrix, variablesBase);
+
     /**A esta altura cambiamos las de exceso */
     /**Ya que tenemos la nueva matriz,hacemos la llamada recursiva */
-    return this.Simplex_Method(newMatrix, variablesBase);
+    return this.Simplex_Method(newMatrix, variablesBase, true);
     // console.log(evaluaciones);
   }
   Simplex_Fase_1(matrix, variablesBase) {
@@ -335,22 +341,29 @@ export default class SimplexSolver {
     }
     matrix.forEach((item, index) => {
       /**El ultimo renglon no se suma */
-      if (index !== matrix.length - 1) {
+
+      if (
+        index !== matrix.length - 1 &&
+        variablesBase[index].charAt(0) === "E"
+      ) {
         for (let i = 0; i < item.length; i++) {
           suma[i] = suma[i] + item[i];
         }
       }
     });
+
     /**Multimplicar todo por -1 */
     /**Y Sumar suma con el renglon objetivo */
-    suma = suma.map((item, index) => -1 * item + matrix[funcionZ][index]);
+    suma = suma.map((item, index) => {
+      return -1 * item + matrix[funcionZ][index];
+    });
+
     matrix[funcionZ] = suma;
     this.CrearTabla(matrix, variablesBase);
     return matrix;
   }
   Convertir_Fase_2(matrix, variablesBase) {
     let matrixSimplex = matrix;
-    variablesBase = variablesBase;
     /**Tenemos que borrar todas las variables de exceso */
     matrixSimplex = matrixSimplex.map((item) => {
       let renglonSinExceso = _.remove(
@@ -432,13 +445,12 @@ export default class SimplexSolver {
     /**Primero se deben de crear la matriz */
     /**Esta funcion nos regresa las variables en la base */
     let variablesBase = this.CrearRenglones();
-
     /**Si tenemos una variable de exceso tenemos que hacer un procedimiento intermedio antes de pasara directamente al simplex */
     this.CrearTabla(this.matrix, variablesBase);
+
     if (this.exceso > 0) {
       const matrizFase1 = this.Simplex_Fase_1(this.matrix, variablesBase);
       const finalSimplex1 = this.Simplex_Method(matrizFase1, variablesBase);
-
       const finalFase2 = this.Convertir_Fase_2(
         finalSimplex1.matrix,
         finalSimplex1.variablesBase
