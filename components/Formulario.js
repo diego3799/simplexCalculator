@@ -8,22 +8,46 @@ import Solucion from "./Solucion";
 const Formulario = () => {
   const methods = useForm({
     defaultValues: {
-      objX: 2,
-      objY: 7,
+      objX: 3,
+      objY: 8,
       objZ: 1,
-      todo: "max",
+      todo: "min",
       restricciones: [
         {
-          sign: "le",
+          sign: "ge",
           x1: 1,
-          x2: 2,
-          z: 2,
+          x2: 1,
+          z: 8,
+        },
+        {
+          sign: "le",
+          x1: 2,
+          x2: -3,
+          z: 0,
         },
         {
           sign: "le",
           x1: 1,
+          x2: 2,
+          z: 30,
+        },
+        {
+          sign: "ge",
+          x1: 3,
           x2: -1,
-          z: 1,
+          z: 0,
+        },
+        {
+          sign: "le",
+          x1: 1,
+          x2: 0,
+          z: 10,
+        },
+        {
+          sign: "ge",
+          x1: 0,
+          x2: 1,
+          z: 9,
         },
       ],
     },
@@ -123,6 +147,7 @@ export default Formulario;
 //     },
 //   ],
 // },
+// Problema exceso 3
 
 //Problema 1 pdf 1
 // defaultValues: {

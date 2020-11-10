@@ -74,9 +74,9 @@ export default class SimplexSolver {
       if (index !== arrayRestricciones.length - 1) {
         item[totVariables] = parseFloat(this.restricciones[index].z);
       } else {
-        /**TODO: Falta checar que si son de exceso agregarle los unos */
+        /**Esto es para las variables de exceso, llenarlas con 1 */
         for (let j = 2 + holgura + 1; j < totVariables; j++) {
-          item[j] = this.todo === "min" ? 1 : -1;
+          item[j] = 1;
         }
         item[totVariables] = 0;
       }
@@ -454,7 +454,8 @@ export default class SimplexSolver {
       const finalFase2 = this.Convertir_Fase_2(
         finalSimplex1.matrix,
         finalSimplex1.variablesBase
-      );
+        );
+        return;
     } else {
       /**Sino nos seguimos con el simplex */
       const resultados = this.Simplex_Method(this.matrix, variablesBase);
