@@ -2,7 +2,7 @@ import React, { Fragment, useEffect } from "react";
 import SimplexSolver from "./solverFunction";
 import { Card, Table } from "./StyledItems";
 
-const Solucion = ({ data }) => {
+const Solucion = React.memo(({ data }) => {
   let solver;
   if (data) {
     solver = new SimplexSolver(
@@ -24,6 +24,6 @@ const Solucion = ({ data }) => {
       )}
     </Card>
   );
-};
+});
 
 export default Solucion;

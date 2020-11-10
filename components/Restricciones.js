@@ -3,15 +3,23 @@ import { useFieldArray, useFormContext } from "react-hook-form";
 import { css } from "styled-components";
 import { Button, Input, Select, Card } from "./StyledItems";
 
-const Restricciones = () => {
+const Restricciones = ({ variables, arrayVairables }) => {
   const { control, register } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "restricciones",
   });
+
+  if (variables <= 0)
+    return (
+      <Card>
+        <h2>Tercer Paso</h2>
+        <p>Selecciona el numero de variables</p>
+      </Card>
+    );
   return (
     <Card>
-      <h2>Segundo Paso</h2>
+      <h2>Tercer Paso</h2>
       <div
         css={css`
           display: flex;

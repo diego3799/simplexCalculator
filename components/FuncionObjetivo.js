@@ -1,20 +1,21 @@
-import React from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { Button, Card, Input, Select } from "./StyledItems";
 import { css } from "styled-components";
 import { useFormContext } from "react-hook-form";
-const FuncionObjetivo = () => {
+const FuncionObjetivo = ({ variables, arrayVairables }) => {
   const { register } = useFormContext();
+
+  if (variables <= 0)
+    return (
+      <Card>
+        <h2>Segundo Paso</h2>
+        <p>Selecciona el numero de variables</p>
+      </Card>
+    );
+  console.log(arrayVairables);
   return (
     <Card>
-      <h2>Primer paso</h2>
-      {/* <p>¿Cuantas variables tiene el problema?</p>
-      <Input
-        type="number"
-        css={css`
-          width: 50%;
-        `}
-      />
-      <Button bgColor="#EDAE49">Crear Formulario</Button> */}
+      <h2>Segundo Paso</h2>
       <div
         css={css`
           display: flex;
@@ -32,8 +33,25 @@ const FuncionObjetivo = () => {
               min-width: 190px;
             `}
           >
-            <Input name="objX" type="text" ref={register} /> x1 +{" "}
-            <Input name="objY" type="text" ref={register} /> x2 =
+            {arrayVairables.map((item, index) => {
+              /**Si es el ultimo */
+
+              if (arrayVairables.length - 1 !== index) {
+                return (
+                  <Fragment>
+                    <Input name={`objX${index}`} type="text" ref={register} /> x
+                    {index + 1} +
+                  </Fragment>
+                );
+              } else {
+                return (
+                  <Fragment>
+                    <Input name={`objX${index}`} type="text" ref={register} /> x
+                    {index + 1} =
+                  </Fragment>
+                );
+              }
+            })}
             <Input name="objZ" type="text" ref={register} />
           </div>
         </div>

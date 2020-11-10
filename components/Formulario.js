@@ -1,34 +1,23 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { css } from "styled-components";
 import FuncionObjetivo from "./FuncionObjetivo";
+import NumeroRestricciones from "./NumeroRestricciones";
 import Restricciones from "./Restricciones";
 import Solucion from "./Solucion";
 
 const Formulario = () => {
-  const methods = useForm({
-    defaultValues: {
-      objX: 5,
-      objY: 2,
-      objZ: 1,
-      todo: "max",
-      restricciones: [
-        {
-          sign: "le",
-          x1: 6,
-          x2: 10,
-          z: 30,
-        },
-        {
-          sign: "le",
-          x1: 10,
-          x2: 4,
-          z: 20,
-        },
-      ],
-    },
-  });
+  const methods = useForm();
   const [data, setData] = useState(null);
+  const [variables, setVariables] = useState(0);
+  const [arrayVairables, setArrayVariables] = useState([]);
+  useEffect(() => {
+    let newArray = [];
+    for (let i = 0; i < variables; i++) {
+      newArray.push(i);
+    }
+    setArrayVariables(newArray);
+  }, [variables]);
   const onSubmit = (data) => setData(data);
   return (
     <section>
@@ -43,10 +32,19 @@ const Formulario = () => {
             }
           `}
         >
-          <form onSubmit={methods.handleSubmit(onSubmit)}>
-            <FuncionObjetivo />
-            <Restricciones />
-          </form>
+          <div>
+            <NumeroRestricciones setVariables={setVariables} />
+            <form onSubmit={methods.handleSubmit(onSubmit)}>
+              <FuncionObjetivo
+                variables={variables}
+                arrayVairables={arrayVairables}
+              />
+              <Restricciones
+                variables={variables}
+                arrayVairables={arrayVairables}
+              />
+            </form>
+          </div>
           <Solucion data={data} />
         </div>
       </FormProvider>
