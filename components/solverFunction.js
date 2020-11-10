@@ -24,7 +24,7 @@ export default class SimplexSolver {
           /**Si es igual la neta es que no se jajaja
            * TODO: Preguntar que hacemos cuando tenemos igual
            */
-          return [];
+          return renglones;
 
         case "le":
           contadorHolgura++;
