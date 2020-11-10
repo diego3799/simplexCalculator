@@ -8,46 +8,22 @@ import Solucion from "./Solucion";
 const Formulario = () => {
   const methods = useForm({
     defaultValues: {
-      objX: 3,
-      objY: 8,
+      objX: 2,
+      objY: 4,
       objZ: 1,
       todo: "min",
       restricciones: [
         {
           sign: "ge",
-          x1: 1,
-          x2: 1,
-          z: 8,
-        },
-        {
-          sign: "le",
-          x1: 2,
-          x2: -3,
-          z: 0,
-        },
-        {
-          sign: "le",
-          x1: 1,
-          x2: 2,
-          z: 30,
-        },
-        {
-          sign: "ge",
           x1: 3,
-          x2: -1,
-          z: 0,
-        },
-        {
-          sign: "le",
-          x1: 1,
-          x2: 0,
-          z: 10,
+          x2: 2,
+          z: 24,
         },
         {
           sign: "ge",
-          x1: 0,
-          x2: 1,
-          z: 9,
+          x1: 4,
+          x2: 5,
+          z: 60,
         },
       ],
     },

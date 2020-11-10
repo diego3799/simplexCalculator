@@ -1,5 +1,6 @@
 import { isArguments, sum } from "lodash";
-import React from "react";
+import React, { Fragment } from "react";
+import { css } from "styled-components";
 import { Table } from "./StyledItems";
 const _ = require("lodash");
 export default class SimplexSolver {
@@ -109,125 +110,71 @@ export default class SimplexSolver {
     return variablesBase;
   }
 
-  CrearTabla(matrix, variablesBase) {
+  CrearTabla(matrix, variablesBase, textoAuxiliar, coordenadas) {
     const tabla = (
-      <Table>
-        <thead>
-          <tr>
-            <th></th>
-            {this.variablesHeader.map((item) => (
-              <th>{item}</th>
-            ))}
-            <th>Rest</th>
-          </tr>
-        </thead>
-        <tbody>
-          {matrix.map((item, index) => (
+      <Fragment>
+        <p>{textoAuxiliar}</p>
+        <Table>
+          <thead>
             <tr>
-              <th>{variablesBase[index]}</th>
-              {item.map((valoresRenglon) => (
-                <td>{_.round(valoresRenglon, 3)}</td>
+              <th></th>
+              {this.variablesHeader.map((item, index) => (
+                <th
+                  css={
+                    coordenadas &&
+                    index === coordenadas.columnaPivote &&
+                    css`
+                      background-color: #edae49 !important;
+                    `
+                  }
+                >
+                  {item}
+                </th>
               ))}
+              <th>Res</th>
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {matrix.map((item, index) => (
+              <tr>
+                <th
+                  css={
+                    coordenadas &&
+                    index === coordenadas.renglonPivote &&
+                    css`
+                      background-color: #edae49 !important;
+                    `
+                  }
+                >
+                  {variablesBase[index]}
+                </th>
+                {item.map((valoresRenglon, segundoIndex) => (
+                  <td
+                    css={
+                      coordenadas
+                        ? segundoIndex === coordenadas.columnaPivote ||
+                          coordenadas.renglonPivote === index
+                          ? css`
+                              background-color: #edae49 !important;
+                              color: white !important;
+                              border-top: 1px solid white;
+                              border-left: 1px solid white;
+                              font-weight: bold;
+                            `
+                          : null
+                        : null
+                    }
+                  >
+                    {_.round(valoresRenglon, 3)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </Fragment>
     );
     this.tablas.push(tabla);
-  }
-
-  Second_Simplex(matrix, variablesBase, totVariables) {
-    /**Primero tenemos que encontrar la columna pivote */
-    /**La columna pivote es el valor más negativo en la fila de la función Z
-     * En este caso es siempre el último renglon
-     */
-    let funcionZ = matrix.length - 1;
-    let aux = 10000000;
-    let indexColumnaPivote = 0;
-
-    matrix[funcionZ].forEach((item, index) => {
-      /**Si el valor ya habia salido no puede volver a salir */
-      /**TODO:Eliminar */
-      // if (!this.historyRenglones.includes(this.variablesHeader[index]))
-      if (index !== this.totVariables) {
-        if (item <= aux) {
-          aux = item;
-          indexColumnaPivote = index;
-        }
-      }
-    });
-
-    let columnaPivote = indexColumnaPivote;
-
-    // _.indexOf(matrix[funcionZ], aux);
-    /** Si no hay valor negativo, entonces acabamos
-     * Aqui se acabo
-     */
-    /** Si tenemos variables de exceso tenemos que ver que ya no esten en la base */
-    if (aux >= 0) {
-      return matrix;
-    }
-
-    /**Luego tenemos que encontrar el renglon pivote
-     * Primero tenemos que sacar todas las valoraciones de las constantes de las restricciones
-     * Y quedarnos con el valor más bajo
-     */
-    aux = 100000;
-    let indexRenglonPivote = 0;
-    let evaluaciones = matrix.map((item, index) => {
-      let rest = item[this.totVariables];
-      let valor = item[columnaPivote];
-      /**No se pueden evaluar las restricciones negativas */
-      if (index !== funcionZ && rest >= 0 && valor > 0) {
-        console.log(rest, valor);
-        let returnValue = rest / valor;
-        if (returnValue <= aux) {
-          indexRenglonPivote = index;
-          aux = returnValue;
-        }
-        return returnValue;
-      }
-      return null;
-    });
-    console.log(indexRenglonPivote);
-    let renglonPivote = indexRenglonPivote;
-    console.log(renglonPivote, columnaPivote);
-    // _.indexOf(evaluaciones, aux);
-    let elementoPivote = matrix[renglonPivote][columnaPivote];
-    /**Ahora tenemos que crear la nueva matriz */
-    /**Tenemos cambiar el renglon de la base por la variable que entra */
-    variablesBase[renglonPivote] = this.variablesHeader[columnaPivote];
-    this.historyRenglones.push(this.variablesHeader[columnaPivote]);
-    /**Convertimos el valor del renglon pivote a uno */
-    const nuevoRenglon = matrix[renglonPivote].map((item) =>
-      _.round(item / elementoPivote, 5)
-    );
-
-    /**Ahora tenemos que generar la nueva matriz a ser evaluada */
-
-    let newMatrix = matrix.map((item, index) => {
-      /**Primero hay que ver si el renglon no es el mismo que el pivote
-       * Si si es lo saltamos
-       */
-      if (index !== renglonPivote) {
-        /**Obtener el valor de esa columna */
-        let valorColumna = item[columnaPivote];
-        let renglonMod = item.map((elementRenglon, indexRenglon) => {
-          return _.round(
-            nuevoRenglon[indexRenglon] * -1 * valorColumna + elementRenglon,
-            5
-          );
-        });
-        return renglonMod;
-      } else {
-        return nuevoRenglon;
-      }
-    });
-    this.CrearTabla(newMatrix, variablesBase);
-    /**A esta altura cambiamos las de exceso */
-    /**Ya que tenemos la nueva matriz,hacemos la llamada recursiva */
-    // return this.Second_Simplex(newMatrix, variablesBase);
-    // console.log(evaluaciones);
   }
   /**Tiene que ser recursivo, dado que no sabemos hasta donde puede terminar */
   Simplex_Method(matrix, variablesBase, detener) {
@@ -266,9 +213,11 @@ export default class SimplexSolver {
       });
       /**Si no hay  */
       if (!flag) {
+        this.CrearTabla(matrix, variablesBase, "Terminamos el primer Simplex");
         return { matrix, variablesBase };
       }
     } else if (aux >= 0) {
+      this.CrearTabla(matrix, variablesBase, "Esta es la tabla final");
       return matrix;
     }
 
@@ -293,7 +242,10 @@ export default class SimplexSolver {
       return null;
     });
     let renglonPivote = indexRenglonPivote;
-
+    this.CrearTabla(matrix, variablesBase, "", {
+      renglonPivote,
+      columnaPivote,
+    });
     // _.indexOf(evaluaciones, aux);
     let elementoPivote = matrix[renglonPivote][columnaPivote];
     /**Ahora tenemos que crear la nueva matriz */
@@ -324,11 +276,10 @@ export default class SimplexSolver {
         return nuevoRenglon;
       }
     });
-    this.CrearTabla(newMatrix, variablesBase);
 
     /**A esta altura cambiamos las de exceso */
     /**Ya que tenemos la nueva matriz,hacemos la llamada recursiva */
-    return this.Simplex_Method(newMatrix, variablesBase, true);
+    return this.Simplex_Method(newMatrix, variablesBase);
     // console.log(evaluaciones);
   }
   Simplex_Fase_1(matrix, variablesBase) {
@@ -359,7 +310,11 @@ export default class SimplexSolver {
     });
 
     matrix[funcionZ] = suma;
-    this.CrearTabla(matrix, variablesBase);
+    this.CrearTabla(
+      matrix,
+      variablesBase,
+      "Suma de las variables de exceso * -1 + Z"
+    );
     return matrix;
   }
   Convertir_Fase_2(matrix, variablesBase) {
@@ -380,7 +335,11 @@ export default class SimplexSolver {
     /**Tenemos que quitar el maximo de variables */
     this.totVariables = 3 + this.holgura;
     this.variablesHeader = newVariablesHeader;
-    this.CrearTabla(matrixSimplex, variablesBase);
+    this.CrearTabla(
+      matrixSimplex,
+      variablesBase,
+      "Quitamos las variables de exceso"
+    );
     /**Tenemos que cambiar el renglon de Z */
     const nuevoRenglonZ =
       this.todo === "max"
@@ -402,7 +361,7 @@ export default class SimplexSolver {
     }
     matrixSimplex.pop();
     matrixSimplex.push(nuevoRenglonZ);
-    this.CrearTabla(matrixSimplex, variablesBase);
+    this.CrearTabla(matrixSimplex, variablesBase, "Modificamos el renglon Z");
     /**Aqui tenemos que hacer un cambio donde todos los renglones menos el ultimo
      * se suman
      */
@@ -438,27 +397,55 @@ export default class SimplexSolver {
       renglonModificado[i] = matrixSimplex[renglonZ][i] + renglonesSumados[i];
     }
     matrixSimplex[renglonZ] = [...renglonModificado];
-    this.CrearTabla(matrixSimplex, variablesBase);
-    this.Second_Simplex(matrixSimplex, variablesBase, true);
+    this.CrearTabla(
+      matrixSimplex,
+      variablesBase,
+      "Hacer 0 las variables de la base"
+    );
+    this.exceso = 0;
+    return this.Simplex_Method(matrixSimplex, variablesBase);
   }
   Solve() {
     /**Primero se deben de crear la matriz */
     /**Esta funcion nos regresa las variables en la base */
+    let resultados;
     let variablesBase = this.CrearRenglones();
     /**Si tenemos una variable de exceso tenemos que hacer un procedimiento intermedio antes de pasara directamente al simplex */
-    this.CrearTabla(this.matrix, variablesBase);
+    this.CrearTabla(this.matrix, variablesBase, "Tabla inicial");
 
     if (this.exceso > 0) {
       const matrizFase1 = this.Simplex_Fase_1(this.matrix, variablesBase);
       const finalSimplex1 = this.Simplex_Method(matrizFase1, variablesBase);
-      const finalFase2 = this.Convertir_Fase_2(
+      resultados = this.Convertir_Fase_2(
         finalSimplex1.matrix,
         finalSimplex1.variablesBase
-        );
-        return;
+      );
     } else {
       /**Sino nos seguimos con el simplex */
-      const resultados = this.Simplex_Method(this.matrix, variablesBase);
+      resultados = this.Simplex_Method(this.matrix, variablesBase);
     }
+    console.table(resultados);
+    /**Crear la tabla de los resultados */
+    const Tableresultados = (
+      <Table>
+        <thead>
+          <th></th>
+          <th>Valores optimos</th>
+        </thead>
+        <tbody>
+          {resultados.map((item, index) => (
+            <tr>
+              <th>{variablesBase[index]}</th>
+              <td>
+                {index === resultados.length - 1 && this.todo === "min"
+                  ? -1 * _.round(resultados[index][resultados[0].length - 1], 3)
+                  : _.round(resultados[index][resultados[0].length - 1], 3)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    );
+    this.tablas.push(Tableresultados);
   }
 }
