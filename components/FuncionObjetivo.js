@@ -7,14 +7,6 @@ const FuncionObjetivo = () => {
   return (
     <Card>
       <h2>Primer paso</h2>
-      {/* <p>¿Cuantas variables tiene el problema?</p>
-      <Input
-        type="number"
-        css={css`
-          width: 50%;
-        `}
-      />
-      <Button bgColor="#EDAE49">Crear Formulario</Button> */}
       <div
         css={css`
           display: flex;

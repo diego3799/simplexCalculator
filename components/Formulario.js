@@ -8,22 +8,34 @@ import Solucion from "./Solucion";
 const Formulario = () => {
   const methods = useForm({
     defaultValues: {
-      objX: 5,
-      objY: 2,
+      objX: 250,
+      objY: 250,
       objZ: 1,
-      todo: "max",
+      todo: "min",
       restricciones: [
         {
           sign: "le",
-          x1: 6,
-          x2: 10,
-          z: 30,
+          x1: 2 / 5,
+          x2: 3 / 5,
+          z: 8,
         },
         {
           sign: "le",
-          x1: 10,
-          x2: 4,
-          z: 20,
+          x1: 1,
+          x2: 3 / 2,
+          z: 15,
+        },
+        {
+          sign: "le",
+          x1: 1 / 3,
+          x2: 1,
+          z: 8,
+        },
+        {
+          sign: "le",
+          x1: 8 / 3,
+          x2: 2,
+          z: 32,
         },
       ],
     },
@@ -56,7 +68,7 @@ const Formulario = () => {
 
 export default Formulario;
 
-//Problema Exceso
+//Problema Exceso 1
 // defaultValues: {
 //   objX: 2,
 //   objY: 4,
@@ -74,6 +86,52 @@ export default Formulario;
 //       x1: 4,
 //       x2: 5,
 //       z: 60,
+//     },
+//   ],
+// },
+
+//Problema exceso 2
+// defaultValues: {
+//   objX: 3,
+//   objY: 8,
+//   objZ: 1,
+//   todo: "min",
+//   restricciones: [
+//     {
+//       sign: "ge",
+//       x1: 1,
+//       x2: 1,
+//       z: 8,
+//     },
+//     {
+//       sign: "le",
+//       x1: 2,
+//       x2: -3,
+//       z: 0,
+//     },
+//     {
+//       sign: "le",
+//       x1: 1,
+//       x2: 2,
+//       z: 30,
+//     },
+//     {
+//       sign: "ge",
+//       x1: 3,
+//       x2: -1,
+//       z: 0,
+//     },
+//     {
+//       sign: "le",
+//       x1: 1,
+//       x2: 0,
+//       z: 10,
+//     },
+//     {
+//       sign: "ge",
+//       x1: 0,
+//       x2: 1,
+//       z: 9,
 //     },
 //   ],
 // },

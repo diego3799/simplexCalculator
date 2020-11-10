@@ -13,6 +13,9 @@ export default class SimplexSolver {
   CrearRenglones() {
     let holgura = this.restricciones.length;
     let exceso = 0;
+    let contadorHolgura = 0;
+    let variablesHeader = ["Z", "X1", "X2"];
+    let variablesBase = [];
     const arrayRestricciones = this.restricciones.map((item, index) => {
       let renglones = [0, parseFloat(item.x1), parseFloat(item.x2)];
       switch (item.sign) {
@@ -23,18 +26,24 @@ export default class SimplexSolver {
           return [];
 
         case "le":
+          contadorHolgura++;
           /**Si es menos o igual se agregan variables de holgura */
           renglones[2 + index + 1] = 1;
+          /**Se agrega la variable de holgura a la base */
+          variablesBase.push(`H${contadorHolgura}`);
           return renglones;
 
         case "ge":
           /**Si es mayor o igual se agregan variables de exceso y holgura */
           /**Agregamos una variable de exceso */
           exceso++;
+
           /**Aqui agregamos la variable de holgura */
           renglones[2 + index + 1] = -1;
           /**Aqui agregamos la variable de exceso */
           renglones[2 + holgura + exceso] = 1;
+          /**Se agrega vairable de exceso a la base */
+          variablesBase.push(`E${exceso}`);
 
           return renglones;
       }
@@ -75,27 +84,16 @@ export default class SimplexSolver {
 
       return renglon;
     });
-    let variablesHeader = ["Z", "X1", "X2"];
-    let variablesBase = [];
-    if (exceso === 0) {
-      for (let i = 0; i < holgura; i++) {
-        variablesBase.push(`H${i + 1}`);
-        variablesHeader.push(`H${i + 1}`);
-      }
-      variablesBase.push("Z");
-    } else {
-      for (let i = 0; i < holgura; i++) {
-        variablesHeader.push(`H${i + 1}`);
-      }
-      for (let i = 0; i < exceso; i++) {
-        variablesHeader.push(`E${i + 1}`);
-        variablesBase.push(`E${i + 1}`);
-      }
-      variablesBase.push("Z");
+
+    /**Agregar las vairables del header */
+    /**Primero las de holgura */
+    for (let i = 0; i < holgura; i++) {
+      variablesHeader.push(`H${i + 1}`);
     }
-    /**TODO: falta metodo de las dos fases */
-    // console.log(variablesBase);
-    // console.log(variablesHeader);
+    for (let i = 0; i < exceso; i++) {
+      variablesHeader.push(`E${i + 1}`);
+    }
+    variablesBase.push("Z");
     this.variablesHeader = variablesHeader;
     this.matrix = matrix;
     this.exceso = exceso;
@@ -121,7 +119,7 @@ export default class SimplexSolver {
             <tr>
               <th>{variablesBase[index]}</th>
               {item.map((valoresRenglon) => (
-                <td>{valoresRenglon}</td>
+                <td>{_.round(valoresRenglon, 3)}</td>
               ))}
             </tr>
           ))}
@@ -248,7 +246,6 @@ export default class SimplexSolver {
     });
 
     let columnaPivote = indexColumnaPivote;
-
     // _.indexOf(matrix[funcionZ], aux);
     /** Si no hay valor negativo, entonces acabamos
      * Aqui se acabo
@@ -291,6 +288,7 @@ export default class SimplexSolver {
       return null;
     });
     let renglonPivote = indexRenglonPivote;
+
     // _.indexOf(evaluaciones, aux);
     let elementoPivote = matrix[renglonPivote][columnaPivote];
     /**Ahora tenemos que crear la nueva matriz */
@@ -298,8 +296,8 @@ export default class SimplexSolver {
     variablesBase[renglonPivote] = this.variablesHeader[columnaPivote];
     this.historyRenglones.push(this.variablesHeader[columnaPivote]);
     /**Convertimos el valor del renglon pivote a uno */
-    const nuevoRenglon = matrix[renglonPivote].map((item) =>
-      _.round(item / elementoPivote, 5)
+    const nuevoRenglon = matrix[renglonPivote].map(
+      (item) => item / elementoPivote
     );
 
     /**Ahora tenemos que generar la nueva matriz a ser evaluada */
@@ -312,9 +310,8 @@ export default class SimplexSolver {
         /**Obtener el valor de esa columna */
         let valorColumna = item[columnaPivote];
         let renglonMod = item.map((elementRenglon, indexRenglon) => {
-          return _.round(
-            nuevoRenglon[indexRenglon] * -1 * valorColumna + elementRenglon,
-            5
+          return (
+            nuevoRenglon[indexRenglon] * -1 * valorColumna + elementRenglon
           );
         });
         return renglonMod;
@@ -435,11 +432,13 @@ export default class SimplexSolver {
     /**Primero se deben de crear la matriz */
     /**Esta funcion nos regresa las variables en la base */
     let variablesBase = this.CrearRenglones();
+
     /**Si tenemos una variable de exceso tenemos que hacer un procedimiento intermedio antes de pasara directamente al simplex */
     this.CrearTabla(this.matrix, variablesBase);
     if (this.exceso > 0) {
       const matrizFase1 = this.Simplex_Fase_1(this.matrix, variablesBase);
       const finalSimplex1 = this.Simplex_Method(matrizFase1, variablesBase);
+
       const finalFase2 = this.Convertir_Fase_2(
         finalSimplex1.matrix,
         finalSimplex1.variablesBase
