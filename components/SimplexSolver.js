@@ -1,4 +1,3 @@
-import { isArguments, sum } from "lodash";
 import React, { Fragment } from "react";
 import { css } from "styled-components";
 import { Table } from "./StyledItems";
@@ -412,6 +411,7 @@ export default class SimplexSolver {
     let variablesBase = this.CrearRenglones();
     /**Si tenemos una variable de exceso tenemos que hacer un procedimiento intermedio antes de pasara directamente al simplex */
     this.CrearTabla(this.matrix, variablesBase, "Tabla inicial");
+    return;
 
     if (this.exceso > 0) {
       const matrizFase1 = this.Simplex_Fase_1(this.matrix, variablesBase);
@@ -424,7 +424,6 @@ export default class SimplexSolver {
       /**Sino nos seguimos con el simplex */
       resultados = this.Simplex_Method(this.matrix, variablesBase);
     }
-    console.table(resultados);
     /**Crear la tabla de los resultados */
     const Tableresultados = (
       <Table>

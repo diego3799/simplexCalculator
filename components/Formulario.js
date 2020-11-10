@@ -1,55 +1,71 @@
-import React, { useState } from "react";
+import React, { useDebugValue, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { css } from "styled-components";
 import FuncionObjetivo from "./FuncionObjetivo";
 import Restricciones from "./Restricciones";
 import Solucion from "./Solucion";
+import { Button, Card, Input } from "./StyledItems";
 
 const Formulario = () => {
-  const methods = useForm({
-    defaultValues: {
-      objX: 2,
-      objY: 4,
-      objZ: 1,
-      todo: "min",
-      restricciones: [
-        {
-          sign: "ge",
-          x1: 3,
-          x2: 2,
-          z: 24,
-        },
-        {
-          sign: "ge",
-          x1: 4,
-          x2: 5,
-          z: 60,
-        },
-      ],
-    },
-  });
+  const methods = useForm();
+  const { register, handleSubmit: onSubmit2 } = useForm();
   const [data, setData] = useState(null);
-  const onSubmit = (data) => setData(data);
+  const [numVariables, setVariables] = useState([]);
+  const onSubmit = (data) => {
+    console.log(data);
+    setData(data);
+  };
+  const onSubmitVariables = ({ variables }) => {
+    let arrayVariables = [];
+    for (let i = 0; i < variables; i++) {
+      arrayVariables[i] = i;
+    }
+    setVariables(arrayVariables);
+  };
   return (
     <section>
-      <FormProvider {...methods}>
-        <div
-          css={css`
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            @media (max-width: 768px) {
-              grid-template-columns: 1fr;
-            }
-          `}
-        >
-          <form onSubmit={methods.handleSubmit(onSubmit)}>
-            <FuncionObjetivo />
-            <Restricciones />
-          </form>
-          <Solucion data={data} />
+      <div
+        css={css`
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          @media (max-width: 768px) {
+            grid-template-columns: 1fr;
+          }
+        `}
+      >
+        <div>
+          <Card>
+            <h2>Primer Paso</h2>
+            <p>¿Cuantas variables tiene el problema?</p>
+            <form
+              onSubmit={onSubmit2(onSubmitVariables)}
+              css={css`
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              `}
+            >
+              <Input
+                type="number"
+                css={css`
+                  width: 100px;
+                `}
+                name="variables"
+                ref={register}
+              />
+              <Button bgColor="#EDAE49">Crear Formulario</Button>
+            </form>
+          </Card>
+          <FormProvider {...methods}>
+            <form onSubmit={methods.handleSubmit(onSubmit)}>
+              <FuncionObjetivo numVariables={numVariables} />
+              <Restricciones numVariables={numVariables} />
+            </form>
+          </FormProvider>
         </div>
-      </FormProvider>
+        <Solucion data={data} />
+      </div>
     </section>
   );
 };

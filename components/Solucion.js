@@ -1,12 +1,13 @@
+import { values } from "lodash";
 import React, { Fragment, useEffect } from "react";
-import SimplexSolver from "./solverFunction";
+import SimplexSolver from "./SimplexSolver";
 import { Card, Table } from "./StyledItems";
-
+const _ = require("lodash");
 const Solucion = ({ data }) => {
   let solver;
   if (data) {
     solver = new SimplexSolver(
-      { x1: data.objX, x2: data.objY, z: data.objZ },
+      { ...data.obj, z: 1 },
       data.restricciones,
       data.todo
     );

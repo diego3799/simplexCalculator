@@ -1,17 +1,23 @@
-import React from "react";
+import React, { Fragment } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { css } from "styled-components";
 import { Button, Input, Select, Card } from "./StyledItems";
 
-const Restricciones = () => {
+const Restricciones = ({ numVariables }) => {
   const { control, register } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "restricciones",
   });
+  if(numVariables<=0){
+    return <Card>
+      <h2>Tercer Paso</h2>
+      <p>Llena los campos anteriores</p>
+    </Card>
+  }
   return (
     <Card>
-      <h2>Segundo Paso</h2>
+      <h2>Tercer Paso</h2>
       <div
         css={css`
           display: flex;
@@ -54,20 +60,18 @@ const Restricciones = () => {
               min-width: 224px;
             `}
           >
-            <Input
-              type="text"
-              ref={register()}
-              defaultValue={field.x1}
-              name={`restricciones[${index}].x1`}
-            />{" "}
-            x1 +{" "}
-            <Input
-              type="text"
-              ref={register()}
-              defaultValue={field.x2}
-              name={`restricciones[${index}].x2`}
-            />{" "}
-            x2
+            {numVariables.map((variables, indexV) => (
+              <Fragment>
+                <Input
+                  type="text"
+                  ref={register()}
+                  // defaultValue={field.x1}
+                  name={`restricciones[${index}].x${indexV + 1}`}
+                />{" "}
+                x{indexV + 1}
+                {numVariables.length-1 !== indexV && "+"}
+              </Fragment>
+            ))}
             <Select
               defaultValue={field.sign}
               ref={register()}

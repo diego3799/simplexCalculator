@@ -1,12 +1,19 @@
-import React from "react";
+import React, { Fragment } from "react";
 import { Button, Card, Input, Select } from "./StyledItems";
 import { css } from "styled-components";
 import { useFormContext } from "react-hook-form";
-const FuncionObjetivo = () => {
+const FuncionObjetivo = ({ numVariables }) => {
   const { register } = useFormContext();
+
+  if(numVariables<=0){
+    return <Card>
+      <h2>Segundo Paso</h2>
+      <p>Llena los campos anteriores</p>
+    </Card>
+  }
   return (
     <Card>
-      <h2>Primer paso</h2>
+      <h2>Segundo paso</h2>
       <div
         css={css`
           display: flex;
@@ -24,9 +31,12 @@ const FuncionObjetivo = () => {
               min-width: 190px;
             `}
           >
-            <Input name="objX" type="text" ref={register} /> x1 +{" "}
-            <Input name="objY" type="text" ref={register} /> x2 =
-            <Input name="objZ" type="text" ref={register} />
+            {numVariables.map((item, index) => (
+              <Fragment>
+                <Input name={`obj.x${index+1}`} type="text" ref={register} /> x
+                {index + 1} {numVariables.length - 1 !== index && "+"}
+              </Fragment>
+            ))}
           </div>
         </div>
         <div>
