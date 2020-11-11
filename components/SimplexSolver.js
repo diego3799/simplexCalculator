@@ -30,8 +30,11 @@ export default class SimplexSolver {
       switch (item.sign) {
         case "eq":
           /**Si es igual la neta es que no se jajaja
-           * TODO: Preguntar que hacemos cuando tenemos igual
+           * TODO: Cuando se tiene igual solo se mete una variable de exceso
            */
+          exceso++;
+          renglones[variablesObjetivo + holgura + exceso] = 1;
+          variablesBase.push(`E${exceso}`);
           return renglones;
 
         case "le":
@@ -240,16 +243,18 @@ export default class SimplexSolver {
           "Ya no hay variables de exceso en la base"
         );
         return { matrix, variablesBase };
-      } else if (this.exceso === iteracion) {
+      } else if (iteracion >= this.exceso) {
         /**Si ya hicimos la iteraciones de las variables de exceso y no han salido
          * Por lo tanto no tiene solucion
          */
-        this.CrearTabla(
-          matrix,
-          variablesBase,
-          "Las variables de exceso siguen en la base, por lo tanto no hay solución"
-        );
-        return false;
+        if (aux >= 0) {
+          this.CrearTabla(
+            matrix,
+            variablesBase,
+            "Las variables de exceso siguen en la base, por lo tanto no hay solución"
+          );
+          return false;
+        }
       }
     } else if (aux >= 0) {
       this.CrearTabla(matrix, variablesBase, "Esta es la tabla final");
