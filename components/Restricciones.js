@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { css } from "styled-components";
 import { Button, Input, Select, Card } from "./StyledItems";
@@ -9,11 +9,17 @@ const Restricciones = ({ numVariables }) => {
     control,
     name: "restricciones",
   });
-  if(numVariables<=0){
-    return <Card>
-      <h2>Tercer Paso</h2>
-      <p>Llena los campos anteriores</p>
-    </Card>
+
+  useEffect(() => {
+    append({});
+  }, []);
+  if (numVariables <= 0) {
+    return (
+      <Card>
+        <h2>Tercer Paso</h2>
+        <p>Llena los campos anteriores</p>
+      </Card>
+    );
   }
   return (
     <Card>
@@ -63,13 +69,14 @@ const Restricciones = ({ numVariables }) => {
             {numVariables.map((variables, indexV) => (
               <Fragment>
                 <Input
-                  type="text"
+                  type="number"
+                  required
                   ref={register()}
                   // defaultValue={field.x1}
                   name={`restricciones[${index}].x${indexV + 1}`}
                 />{" "}
                 x{indexV + 1}
-                {numVariables.length-1 !== indexV && "+"}
+                {numVariables.length - 1 !== indexV && "+"}
               </Fragment>
             ))}
             <Select
@@ -82,9 +89,10 @@ const Restricciones = ({ numVariables }) => {
               <option value="le">{"≤"}</option>
             </Select>
             <Input
-              type="text"
+              type="number"
               defaultValue={field.z}
-              ref={register()}
+              required
+              // ref={register()}
               name={`restricciones[${index}].z`}
             />
           </div>

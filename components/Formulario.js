@@ -5,10 +5,26 @@ import FuncionObjetivo from "./FuncionObjetivo";
 import Restricciones from "./Restricciones";
 import Solucion from "./Solucion";
 import { Button, Card, Input } from "./StyledItems";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
 
+const schema1 = yup.object({
+  variables: yup
+    .number()
+    .typeError("El numero de variables es obligatorio")
+    .min(2, "El minimo son 2 variables")
+    .max(10, "El maximo son 10 variables")
+    .required("El numero de variables es obligatorio"),
+});
+const shcema2 = yup.object({
+  obj: {},
+});
 const Formulario = () => {
-  const methods = useForm();
-  const { register, handleSubmit: onSubmit2 } = useForm();
+  const methods = useForm({});
+  const { register, handleSubmit: onSubmit2, errors: errores1 } = useForm({
+    resolver: yupResolver(schema1),
+  });
+  const { errors } = methods;
   const [data, setData] = useState(null);
   const [numVariables, setVariables] = useState([]);
   const onSubmit = (data) => {
@@ -26,7 +42,7 @@ const Formulario = () => {
       <div
         css={css`
           display: grid;
-          grid-template-columns: 1fr;
+          grid-template-columns: ${numVariables.length > 5 ? "1fr" : "1fr 1fr"};
           gap: 20px;
           @media (max-width: 768px) {
             grid-template-columns: 1fr;
@@ -36,6 +52,7 @@ const Formulario = () => {
         <div>
           <Card>
             <h2>Primer Paso</h2>
+            {errores1.variables && <p>{errores1.variables.message}</p>}
             <p>¿Cuantas variables tiene el problema?</p>
             <form
               onSubmit={onSubmit2(onSubmitVariables)}
