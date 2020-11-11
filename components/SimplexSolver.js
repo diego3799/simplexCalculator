@@ -1,3 +1,4 @@
+import { isArguments } from "lodash";
 import React, { Fragment } from "react";
 import { css } from "styled-components";
 import { Table } from "./StyledItems";
@@ -12,12 +13,20 @@ export default class SimplexSolver {
   }
   CrearRenglones() {
     let holgura = this.restricciones.length;
+    let variablesObjetivo = Object.keys(this.objetivo).length - 1;
+    // console.log(variablesObjetivo);
     let exceso = 0;
     let contadorHolgura = 0;
-    let variablesHeader = ["Z", "X1", "X2"];
+    let variablesHeader = ["Z"];
     let variablesBase = [];
     const arrayRestricciones = this.restricciones.map((item, index) => {
-      let renglones = [0, parseFloat(item.x1), parseFloat(item.x2)];
+      /**Agregar las variables de las que depende el problema */
+      let renglones = [0];
+      for (let valores in item) {
+        if (valores !== "sign" && valores !== "z") {
+          renglones.push(parseFloat(item[valores]));
+        }
+      }
       switch (item.sign) {
         case "eq":
           /**Si es igual la neta es que no se jajaja
@@ -28,7 +37,7 @@ export default class SimplexSolver {
         case "le":
           contadorHolgura++;
           /**Si es menos o igual se agregan variables de holgura */
-          renglones[2 + index + 1] = 1;
+          renglones[variablesObjetivo + index + 1] = 1;
           /**Se agrega la variable de holgura a la base */
           variablesBase.push(`H${contadorHolgura}`);
           return renglones;
@@ -40,15 +49,15 @@ export default class SimplexSolver {
           contadorHolgura++;
           if (item.z <= 0) {
             renglones = [0, -1 * parseFloat(item.x1), -1 * parseFloat(item.x2)];
-            renglones[2 + index + 1] = 1;
+            renglones[variablesObjetivo + index + 1] = 1;
             variablesBase.push(`H${contadorHolgura}`);
             return renglones;
           } else {
             exceso++;
             /**Aqui agregamos la variable de holgura */
-            renglones[2 + index + 1] = -1;
+            renglones[variablesObjetivo + index + 1] = -1;
             /**Aqui agregamos la variable de exceso */
-            renglones[2 + holgura + exceso] = 1;
+            renglones[variablesObjetivo + holgura + exceso] = 1;
             /**Se agrega vairable de exceso a la base */
             variablesBase.push(`E${exceso}`);
 
@@ -56,26 +65,34 @@ export default class SimplexSolver {
           }
       }
     });
-    arrayRestricciones.push(
-      /**Si hay variables de exceso */
-      exceso > 0
-        ? [parseFloat(this.objetivo.z), 0, 0]
-        : this.todo === "max"
-        ? [
-            parseFloat(this.objetivo.z),
-            -1 * this.objetivo.x1,
-            -1 * this.objetivo.x2,
-          ]
-        : [parseFloat(this.objetivo.z), this.objetivo.x1, this.objetivo.x2]
-    );
-    let totVariables = 3 + holgura + exceso;
+    let arrayFuncionZ = [1];
+    if (exceso === 0) {
+      for (let valorZ in this.objetivo) {
+        if (valorZ !== "z")
+          arrayFuncionZ.push(
+            this.todo === "max"
+              ? -1 * parseFloat(this.objetivo[valorZ])
+              : parseFloat(this.objetivo[valorZ])
+          );
+      }
+    }
+    arrayRestricciones.push(arrayFuncionZ);
+    // arrayRestricciones.push(
+    //   /**Si hay variables de exceso */
+    //   exceso > 0
+    //     ? [1]
+    //     : this.todo === "max"
+    //     ? [1, -1 * this.objetivo.x1, -1 * this.objetivo.x2]
+    //     : [1, this.objetivo.x1, this.objetivo.x2]
+    // );
+    let totVariables = variablesObjetivo + 1 + holgura + exceso;
     /**Hay que llenar todos los vacios con ceros para evitar errores */
     let matrix = arrayRestricciones.map((item, index) => {
       if (index !== arrayRestricciones.length - 1) {
         item[totVariables] = parseFloat(this.restricciones[index].z);
       } else {
         /**Esto es para las variables de exceso, llenarlas con 1 */
-        for (let j = 2 + holgura + 1; j < totVariables; j++) {
+        for (let j = variablesObjetivo + holgura + 1; j < totVariables; j++) {
           item[j] = 1;
         }
         item[totVariables] = 0;
@@ -93,6 +110,10 @@ export default class SimplexSolver {
     });
 
     /**Agregar las vairables del header */
+    /**Primero las varibales de las que depende */
+    for (let i = 0; i < variablesObjetivo; i++) {
+      variablesHeader.push(`X${i + 1}`);
+    }
     /**Primero las de holgura */
     for (let i = 0; i < holgura; i++) {
       variablesHeader.push(`H${i + 1}`);
@@ -101,6 +122,7 @@ export default class SimplexSolver {
       variablesHeader.push(`E${i + 1}`);
     }
     variablesBase.push("Z");
+    this.variablesObjetivo = variablesObjetivo;
     this.variablesHeader = variablesHeader;
     this.matrix = matrix;
     this.exceso = exceso;
@@ -176,7 +198,7 @@ export default class SimplexSolver {
     this.tablas.push(tabla);
   }
   /**Tiene que ser recursivo, dado que no sabemos hasta donde puede terminar */
-  Simplex_Method(matrix, variablesBase, detener) {
+  Simplex_Method(matrix, variablesBase, iteracion) {
     /**Primero tenemos que encontrar la columna pivote */
     /**La columna pivote es el valor más negativo en la fila de la función Z
      * En este caso es siempre el último renglon
@@ -196,7 +218,6 @@ export default class SimplexSolver {
         }
       }
     });
-
     let columnaPivote = indexColumnaPivote;
     // _.indexOf(matrix[funcionZ], aux);
     /** Si no hay valor negativo, entonces acabamos
@@ -210,10 +231,25 @@ export default class SimplexSolver {
           flag = true;
         }
       });
+
       /**Si no hay  */
       if (!flag) {
-        this.CrearTabla(matrix, variablesBase, "Terminamos el primer Simplex");
+        this.CrearTabla(
+          matrix,
+          variablesBase,
+          "Ya no hay variables de exceso en la base"
+        );
         return { matrix, variablesBase };
+      } else if (this.exceso === iteracion) {
+        /**Si ya hicimos la iteraciones de las variables de exceso y no han salido
+         * Por lo tanto no tiene solucion
+         */
+        this.CrearTabla(
+          matrix,
+          variablesBase,
+          "Las variables de exceso siguen en la base, por lo tanto no hay solución"
+        );
+        return false;
       }
     } else if (aux >= 0) {
       this.CrearTabla(matrix, variablesBase, "Esta es la tabla final");
@@ -230,7 +266,7 @@ export default class SimplexSolver {
       let rest = item[this.totVariables];
       let valor = item[columnaPivote];
       /**No se pueden evaluar las restricciones negativas */
-      if (index !== funcionZ && valor >= 0) {
+      if (index !== funcionZ && valor > 0) {
         let returnValue = rest / valor;
         if (returnValue <= aux) {
           indexRenglonPivote = index;
@@ -240,8 +276,21 @@ export default class SimplexSolver {
       }
       return null;
     });
+    /**Si no pudimos evaluar nada
+     * Significa que todos los valores son negativos o cero
+     *
+     */
     let renglonPivote = indexRenglonPivote;
-    this.CrearTabla(matrix, variablesBase, "", {
+    if (aux === 10000000) {
+      this.CrearTabla(
+        matrix,
+        variablesBase,
+        "La variables de la columna pivote son todas 0 o negativas por lo tanto la solución óptima es no acotada",
+        { renglonPivote, columnaPivote }
+      );
+      return false;
+    }
+    this.CrearTabla(matrix, variablesBase, `Iteración ${iteracion + 1}`, {
       renglonPivote,
       columnaPivote,
     });
@@ -278,7 +327,7 @@ export default class SimplexSolver {
 
     /**A esta altura cambiamos las de exceso */
     /**Ya que tenemos la nueva matriz,hacemos la llamada recursiva */
-    return this.Simplex_Method(newMatrix, variablesBase);
+    return this.Simplex_Method(newMatrix, variablesBase, ++iteracion);
     // console.log(evaluaciones);
   }
   Simplex_Fase_1(matrix, variablesBase) {
@@ -332,7 +381,7 @@ export default class SimplexSolver {
       (item) => item.charAt(0) !== "E"
     );
     /**Tenemos que quitar el maximo de variables */
-    this.totVariables = 3 + this.holgura;
+    this.totVariables = this.variablesObjetivo + 1 + this.holgura;
     this.variablesHeader = newVariablesHeader;
     this.CrearTabla(
       matrixSimplex,
@@ -340,18 +389,27 @@ export default class SimplexSolver {
       "Quitamos las variables de exceso"
     );
     /**Tenemos que cambiar el renglon de Z */
-    const nuevoRenglonZ =
-      this.todo === "max"
-        ? [
-            parseFloat(this.objetivo.z),
-            parseFloat(-1 * this.objetivo.x1),
-            parseFloat(-1 * this.objetivo.x2),
-          ]
-        : [
-            parseFloat(this.objetivo.z),
-            parseFloat(this.objetivo.x1),
-            parseFloat(this.objetivo.x2),
-          ];
+    let nuevoRenglonZ = [1];
+    for (let valorZ in this.objetivo) {
+      if (valorZ !== "z")
+        nuevoRenglonZ.push(
+          this.todo === "max"
+            ? -1 * parseFloat(this.objetivo[valorZ])
+            : parseFloat(this.objetivo[valorZ])
+        );
+    }
+    // const nuevoRenglonZ =
+    //   this.todo === "max"
+    //     ? [
+    //         parseFloat(this.objetivo.z),
+    //         parseFloat(-1 * this.objetivo.x1),
+    //         parseFloat(-1 * this.objetivo.x2),
+    //       ]
+    //     : [
+    //         parseFloat(this.objetivo.z),
+    //         parseFloat(this.objetivo.x1),
+    //         parseFloat(this.objetivo.x2),
+    //       ];
     /**Llenar de cero lo que falta */
     for (let i = 0; i < matrixSimplex[0].length; i++) {
       if (nuevoRenglonZ[i] === undefined) {
@@ -402,7 +460,7 @@ export default class SimplexSolver {
       "Hacer 0 las variables de la base"
     );
     this.exceso = 0;
-    return this.Simplex_Method(matrixSimplex, variablesBase);
+    return this.Simplex_Method(matrixSimplex, variablesBase, 0);
   }
   Solve() {
     /**Primero se deben de crear la matriz */
@@ -411,18 +469,22 @@ export default class SimplexSolver {
     let variablesBase = this.CrearRenglones();
     /**Si tenemos una variable de exceso tenemos que hacer un procedimiento intermedio antes de pasara directamente al simplex */
     this.CrearTabla(this.matrix, variablesBase, "Tabla inicial");
-    return;
-
     if (this.exceso > 0) {
       const matrizFase1 = this.Simplex_Fase_1(this.matrix, variablesBase);
-      const finalSimplex1 = this.Simplex_Method(matrizFase1, variablesBase);
+      const finalSimplex1 = this.Simplex_Method(matrizFase1, variablesBase, 0);
+      if (!finalSimplex1) {
+        return;
+      }
       resultados = this.Convertir_Fase_2(
         finalSimplex1.matrix,
         finalSimplex1.variablesBase
       );
     } else {
       /**Sino nos seguimos con el simplex */
-      resultados = this.Simplex_Method(this.matrix, variablesBase);
+      resultados = this.Simplex_Method(this.matrix, variablesBase, 0);
+    }
+    if (!resultados) {
+      return;
     }
     /**Crear la tabla de los resultados */
     const Tableresultados = (

@@ -12,7 +12,6 @@ const Formulario = () => {
   const [data, setData] = useState(null);
   const [numVariables, setVariables] = useState([]);
   const onSubmit = (data) => {
-    console.log(data);
     setData(data);
   };
   const onSubmitVariables = ({ variables }) => {
@@ -27,7 +26,7 @@ const Formulario = () => {
       <div
         css={css`
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 1fr;
           gap: 20px;
           @media (max-width: 768px) {
             grid-template-columns: 1fr;
@@ -54,7 +53,9 @@ const Formulario = () => {
                 name="variables"
                 ref={register}
               />
-              <Button bgColor="#EDAE49">Crear Formulario</Button>
+              <Button bgColor="#EDAE49" hover="#e08e09">
+                Crear Formulario
+              </Button>
             </form>
           </Card>
           <FormProvider {...methods}>
