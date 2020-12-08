@@ -28,6 +28,7 @@ const Formulario = () => {
   const [data, setData] = useState(null);
   const [numVariables, setVariables] = useState([]);
   const onSubmit = (data) => {
+    // console.log(data);
     setData(data);
   };
   const onSubmitVariables = ({ variables }) => {

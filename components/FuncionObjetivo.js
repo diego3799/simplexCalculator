@@ -33,7 +33,7 @@ const FuncionObjetivo = ({ numVariables }) => {
           >
             {numVariables.map((item, index) => (
               <Fragment>
-                <Input name={`obj.x${index+1}`} type="number" required ref={register} /> x
+                <Input name={`obj.x${index+1}`} type="text" required ref={register} /> x
                 {index + 1} {numVariables.length - 1 !== index && "+"}
               </Fragment>
             ))}

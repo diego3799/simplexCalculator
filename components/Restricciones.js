@@ -69,7 +69,7 @@ const Restricciones = ({ numVariables }) => {
             {numVariables.map((variables, indexV) => (
               <Fragment>
                 <Input
-                  type="number"
+                  type="text"
                   required
                   ref={register()}
                   // defaultValue={field.x1}
@@ -89,10 +89,10 @@ const Restricciones = ({ numVariables }) => {
               <option value="le">{"≤"}</option>
             </Select>
             <Input
-              type="number"
+              type="text"
               defaultValue={field.z}
               required
-              // ref={register()}
+              ref={register()}
               name={`restricciones[${index}].z`}
             />
           </div>
