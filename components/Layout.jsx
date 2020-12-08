@@ -23,6 +23,14 @@ const Header = styled.div`
     }
   }
 `;
+const Nav = styled.nav`
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  & a {
+    margin-right: 10px;
+  }
+`;
 const Layout = ({ children }) => {
   return (
     <div>
@@ -33,10 +41,15 @@ const Layout = ({ children }) => {
           href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;600&family=Poppins:wght@300;600&display=swap"
           rel="stylesheet"
         />
+        
       </Head>
       <Header>
         <div>
           <h1>II Fases Simplex</h1>
+          <Nav>
+            <a href="/grafico">Metodo Gráfico</a>
+            <a href="/markov">Cadenas de Markov</a>
+          </Nav>
         </div>
       </Header>
       <main
