@@ -24,3 +24,23 @@ h2 {
   font-size: 3rem;
   margin: 10px 0;
 }
+tr {
+  text-align: center;
+  font-weight: 500;
+}
+th {
+  background-color: #00798c;
+  color: white;
+  border-top: 1px solid white;
+}
+thead tr th:nth-child(2) {
+  border-left: 1px solid white;
+}
+
+tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+tbody tr:nth-child(even) {
+  background-color: #e5e5e5;
+}
