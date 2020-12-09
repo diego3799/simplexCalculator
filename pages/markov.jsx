@@ -1,8 +1,8 @@
 import React, { Fragment, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as math from "mathjs";
-import imprimirMatrix from "../components/imprimirMatrix";
 import Estacionaria from "../components/Cadenas/Estacionaria";
+import Iteraciones from "../components/Cadenas/Iteraciones";
 const Markov = () => {
   const { register, handleSubmit } = useForm();
   const [mainMatrix, setMainMatrix] = useState(null);
@@ -20,7 +20,6 @@ const Markov = () => {
     const trans = math.transpose(math.matrix(data.matriz));
     setTranspuesta(trans._data);
   }
-  console.log(mainMatrix, probMatrix, transpuesta);
   return (
     <Fragment>
       <div className=" shadow-md py-6 bg-gradient-to-r from-red-500 to-yellow-500">
@@ -155,7 +154,7 @@ const Markov = () => {
               />
             </div>
             <div className="shadow-xl p-10">
-            
+            <Iteraciones probabilidades={probMatrix} transpuesta={transpuesta}/>
             </div>
           </Fragment>
         )}

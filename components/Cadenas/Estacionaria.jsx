@@ -15,7 +15,7 @@ const Estacionaria = ({ matriz, transpuesta, identidad }) => {
   console.log(resultado);
   return (
     <Fragment>
-      <h1>Solucion Estacionaria</h1>
+      <h1 className="text-2xl font-bold text-center my-3">Solucion Estacionaria</h1>
       <div className="flex  items-center justify-between">
         {imprimirMatrix(transpuesta)}
         <p className="text-5xl mx-5">-</p>
@@ -26,7 +26,7 @@ const Estacionaria = ({ matriz, transpuesta, identidad }) => {
       <div className="flex items-center justify-between mt-10">
         {imprimirMatrix(nuevoRenglon)}
 
-        <p className="text-5xl mx-5">*</p>
+  <p className="text-5xl mx-5">{" "}</p>
         {imprimirMatrix(renglon)}
 
         <p className="text-5xl mx-5">=</p>
